@@ -1,12 +1,16 @@
 #include <iostream>
 #include "DB.h"
 #include "Booking.h"
+#include "ReportService.h"
+#include "Customer.h"
 
 using namespace std;
 
 int main() {
     DB db;
     Booking booking(db);
+    ReportService report(db);
+    Customer customer(db);
 
     int choice;
     do {
@@ -17,9 +21,10 @@ int main() {
         cout << "  [1]  Add new booking\n";
         cout << "  [2]  Search booking record\n";
         cout << "  [3]  Cancel booking\n";
-        cout << "  [4]  View instructor schedule\n";
-        cout << "  [5]  Generate certificate\n";
-        cout << "  [6]  Monthly revenue report\n";
+        cout << "  [4]  Update customer details\n";
+        cout << "  [5]  View instructor schedule\n";
+        cout << "  [6]  Generate certificate\n";
+        cout << "  [7]  Monthly revenue report\n";
         cout << "  [0]  Exit\n";
 
         cout << "\n-----------------------------------------\n";
@@ -36,9 +41,11 @@ int main() {
         case 1: booking.addBooking(); break;
         case 2: booking.searchBooking(); break;
         case 3: booking.cancelBooking(); break;
-        case 4: booking.viewInstructorSchedule(); break;
-        case 5: booking.generateCertificate(); break;
-        case 6: booking.monthlyRevenueReport(); break;
+        case 4: customer.updateCustomerDetails(); break;
+        case 5: booking.viewInstructorSchedule(); break;
+        case 6: booking.generateCertificate(); break;
+        case 7: report.monthlyRevenueReport(); break;
+
         case 0: cout << "Bye!\n"; break;
         default: cout << "Invalid choice.\n"; break;
         }

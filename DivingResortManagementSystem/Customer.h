@@ -2,7 +2,7 @@
 #define CUSTOMER_H
 #include <iostream>
 #include "DB.h"
-using namespace std;
+
 
 struct CustomerDetails {
 	int customerID = 0;
@@ -18,7 +18,9 @@ public:
 
 	int addCustomer(); //add new cus details and return the new generated Id
 	//void viewCustomer();
+	void updateCustomerDetails();
 	CustomerDetails getCusIdByPhone(string phone); //retrieve cusId by phone no. as parameter
+
 	bool isValidPhone(const string& phone);
 	bool isValidEmail(const string& email);
 };

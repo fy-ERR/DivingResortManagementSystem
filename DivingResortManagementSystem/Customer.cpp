@@ -1,5 +1,4 @@
 #include "Customer.h"
-#include "DB.h"
 #include <iostream>
 #include <string>
 #include <cctype>
@@ -87,6 +86,76 @@ CustomerDetails Customer::getCusIdByPhone(string phone) {
 	delete res;
 
 	return details;
+}
+
+void Customer::updateCustomerDetails() {
+	int customerID;
+	cout << "\nEnter Customer ID to update: ";
+	cin >> customerID;
+
+	auto pstmt = db.prepare(
+		"SELECT cusName, cusPhoneNo, cusEmail, certificationLevel+0 AS certLevel FROM customer WHERE cusID=?"
+	);
+	pstmt->setInt(1, customerID);
+	auto res = pstmt->executeQuery();
+
+	if (!res->next()) {
+		cout << "Customer not found.\n";
+		delete res;
+		delete pstmt;
+		return;
+	}
+
+	string phone = res->getString("cusPhoneNo");
+	string email = res->getString("cusEmail");
+	int certificationLevel = res->getInt("certLevel");
+
+	string certName;
+	if (certificationLevel == 1) certName = "Preliminary diver or swimmer";
+	else if (certificationLevel == 2) certName = "Open Water Diver";
+	else if (certificationLevel == 3) certName = "Advanced Open Water Diver";
+	else certName = "Rescue Diver";
+
+	cout << "\nCurrent Details:\n";
+	cout << "1. Phone   : " << phone << "\n";
+	cout << "2. Email   : " << email << "\n";
+	cout << "3. certificationLevel : " << certName << "\n";
+
+	delete res;
+	delete pstmt;
+
+	int choice;
+	cout << "\nSelect field to update (1-3): ";
+	cin >> choice;
+	cin.ignore();
+
+	if (choice == 3) {
+		cout << "\n1.Preliminary diver or swimmer. \n2.Open Water Diver. \n3.Advanced Open Water Diver. \n4.Rescue Diver. \n";
+		cout << "Enter number to choose customer's new certification level: ";
+	}
+	string newValue;
+	getline(cin, newValue);
+
+	string sql;
+	if (choice == 1) sql = "UPDATE customer SET cusPhoneNo=? WHERE customerID=?";
+	else if (choice == 2) sql = "UPDATE customer SET cusEmail=? WHERE customerID=?";
+	else if (choice == 3) sql = "UPDATE customer SET certificationLevel=? WHERE cusID=?";
+	else {
+		cout << "Invalid choice.\n";
+		return;
+	}
+
+	auto updateStmt = db.prepare(sql);
+	updateStmt->setString(1, newValue);
+	updateStmt->setInt(2, customerID);
+	updateStmt->execute();
+
+	delete updateStmt;
+
+	cout << "Customer details updated successfully.";
+	cout << "\nPress Enter to continue...";
+	cin.ignore(10000, '\n');
+	cin.get();
 }
 
 bool Customer::isValidPhone(const string& phone) {

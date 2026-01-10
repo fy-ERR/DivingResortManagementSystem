@@ -8,6 +8,7 @@
 #include <cppconn/prepared_statement.h>
 #include "mysql_connection.h"
 #include <vector>
+using namespace std;
 
 struct ServiceDetails {
 	int serviceID = 0;       // The unique identifier of the service
@@ -50,8 +51,7 @@ public:
 	void cancelBooking();
 	void viewInstructorSchedule();
 	void generateCertificate();
-	void monthlyRevenueReport();
-	void printBar(const string& label, double value, double scale);
+
 
 	ServiceDetails selectService(); //fetch service list and return serviceId
 	string getServiceDate();
