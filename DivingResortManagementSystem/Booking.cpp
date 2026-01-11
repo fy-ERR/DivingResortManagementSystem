@@ -35,7 +35,7 @@ void Booking::addBooking() {
 
 	switch (choice) {
 	case 1:
-		customerDetails.customerID = cus.addCustomer();
+		customerDetails = cus.addCustomer();
 		break;
 	case 2:
 		//phone no input
@@ -62,22 +62,45 @@ void Booking::addBooking() {
 	cout << "Customer ID " << customerDetails.customerID << " selected/created.\n";
 
 	//Step 2: Select Service (Returns ID, Price, and Pax Limit)
-	ServiceDetails serviceDetails = selectService();
+	ServiceDetails serviceDetails;
 
-	if (serviceDetails.serviceID == 0) {
-		cout << "Invalid Service ID selected. Exiting booking.\n";
-		return;
-	}
+	while (true) {
+		serviceDetails = selectService();
 
-	if (serviceDetails.prerequisiteLevel > 0 &&
-		customerDetails.certificationLevel < serviceDetails.prerequisiteLevel) {
-		cout << "Customer's certification level does not meet the service package's prerequisite level.\n ";
-		cout << "Booking cannot proceed.\n";
+		if (serviceDetails.serviceID == 0) {
+			cout << "Invalid Service ID selected. Exiting booking.\n";
+			return;
+		}
 
-		cout << "Press any key to continue...\n\n";
-		cin.ignore();
-		cin.get();
-		return;
+		// prerequisite check
+		if (serviceDetails.prerequisiteLevel > 0 &&
+			customerDetails.certificationLevel < serviceDetails.prerequisiteLevel) {
+
+			cout << "\nCustomer certification level (" << customerDetails.certificationLevel
+				<< ") does NOT meet prerequisite level (" << serviceDetails.prerequisiteLevel << ").\n";
+
+			int opt;
+			cout << "1. Choose another service\n";
+			cout << "2. End booking\n";
+			cout << "Enter option: ";
+
+			if (!(cin >> opt)) {
+				cin.clear();
+				cin.ignore(10000, '\n');
+				cout << "Invalid input. Ending booking.\n";
+				return;
+			}
+
+			if (opt == 1) {
+				continue; // go back to selectService()
+			}
+			else {
+				cout << "Booking ended.\n";
+				return;
+			}
+		}
+		// if pass prerequisite, break out and continue booking flow
+		break;
 	}
 
 	//Step 3: Get Date of the booking and when service

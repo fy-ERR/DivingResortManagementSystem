@@ -16,7 +16,7 @@ private:
 public:
 	Customer(DB& database);
 
-	int addCustomer(); //add new cus details and return the new generated Id
+	CustomerDetails addCustomer(); //add new cus details and return the new generated Id
 	//void viewCustomer();
 	void updateCustomerDetails();
 	CustomerDetails getCusIdByPhone(string phone); //retrieve cusId by phone no. as parameter

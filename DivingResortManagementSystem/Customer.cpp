@@ -6,7 +6,8 @@ using namespace std;
 
 Customer::Customer(DB& database) : db(database) {}
 
-int Customer::addCustomer() {
+CustomerDetails Customer::addCustomer() {
+	CustomerDetails details;
 	string name;
 	string email;
 	string phoneNo;
@@ -60,7 +61,10 @@ int Customer::addCustomer() {
 	delete qr.res;
 	delete qr.stmt;
 
-	return customerID;
+	details.customerID = customerID;
+	details.certificationLevel = certificationLevel; // <-- you already asked user input
+
+	return details;
 }
 
 CustomerDetails Customer::getCusIdByPhone(string phone) {
