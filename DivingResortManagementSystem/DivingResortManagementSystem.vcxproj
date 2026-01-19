@@ -132,6 +132,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Booking.cpp" />
+    <ClCompile Include="CertificateService.cpp" />
     <ClCompile Include="Customer.cpp" />
     <ClCompile Include="DB.cpp" />
     <ClCompile Include="main.cpp" />
@@ -140,6 +141,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Booking.h" />
+    <ClInclude Include="CertificateService.h" />
     <ClInclude Include="Customer.h" />
     <ClInclude Include="DB.h" />
     <ClInclude Include="Payment.h" />

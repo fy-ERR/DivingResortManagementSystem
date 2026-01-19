@@ -4,7 +4,7 @@
 |              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~                |
 |                                                           |
 |   This is to certify that the following individual has    |
-|   successfully participated in our program.               |
+|   successfully participated in our diving program.        |
 |                                                           |
 +-----------------------------------------------------------+
 |                                                           |
@@ -17,7 +17,7 @@
 +-----------------------------------------------------------+
 |                                                           |
 |   STATUS: [ COMPLETED ]                                   |
-|   ISSUE DATE: 2026-01-12                                  |
+|   ISSUE DATE: 2026-01-19                                  |
 |                                                           |
 |   _______________________         _____________________   |
 |    Instructor Signature            Resort Management      |

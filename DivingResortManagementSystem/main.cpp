@@ -3,6 +3,7 @@
 #include "Booking.h"
 #include "ReportService.h"
 #include "Customer.h"
+#include "CertificateService.h"
 
 using namespace std;
 
@@ -11,6 +12,7 @@ int main() {
     Booking booking(db);
     ReportService report(db);
     Customer customer(db);
+	CertificateService certificateService(db);
 
     int choice;
     do {
@@ -43,7 +45,7 @@ int main() {
         case 3: booking.cancelBooking(); break;
         case 4: customer.updateCustomerDetails(); break;
         case 5: booking.viewInstructorSchedule(); break;
-        case 6: booking.generateCertificate(); break;
+        case 6: certificateService.generateCertificate(); break;
         case 7: report.monthlyRevenueReport(); break;
 
         case 0: cout << "Bye!\n"; break;

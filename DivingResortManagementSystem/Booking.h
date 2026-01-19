@@ -50,8 +50,6 @@ public:
 	void searchBooking();
 	void cancelBooking();
 	void viewInstructorSchedule();
-	void generateCertificate();
-
 
 	ServiceDetails selectService(); //fetch service list and return serviceId
 	string getServiceDate();

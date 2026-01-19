@@ -6,8 +6,6 @@
 #include <chrono>
 #include <sstream>
 #include <regex>
-#include <fstream>
-#include <filesystem>
 using namespace std;
 
 Booking::Booking(DB& database) :db(database), cus(database), pay(database) {}
@@ -261,7 +259,7 @@ int Booking::assignInstructor(int serviceID, const string& serviceDate, int paxL
 		delete durStmt;
 	}
 
-	// 2) Fetch instructors (remove instructorStatus filter unless you REALLY have that column)
+	// 2) Fetch instructors
 	QueryResult qr = db.select("SELECT instructorID, instructorName, specialization FROM instructor");
 	if (!qr.res) {
 		cout << "Error fetching instructors.\n";
@@ -309,21 +307,21 @@ int Booking::assignInstructor(int serviceID, const string& serviceDate, int paxL
 		int overlapCount = 0;
 		{
 			auto overlapStmt = db.prepare(R"(
-	SELECT COUNT(*) AS OverlapCount
-    FROM booking B
-    JOIN instructor_assignment IA ON B.bookingID = IA.bookingID
-    JOIN booking_service BS ON B.bookingID = BS.bookingID
-    JOIN service S ON BS.serviceID = S.serviceID
-    WHERE IA.instructorID = ?
-      AND B.bookingStatus = 'Confirmed'
-      -- allow sharing same service session
-      AND NOT (BS.serviceID = ? AND BS.serviceDate = ?)
-      -- check overlap with other sessions
-      AND (
+			SELECT COUNT(*) AS OverlapCount
+			FROM booking B
+			JOIN instructor_assignment IA ON B.bookingID = IA.bookingID
+			JOIN booking_service BS ON B.bookingID = BS.bookingID
+			JOIN service S ON BS.serviceID = S.serviceID
+			WHERE IA.instructorID = ?
+			AND B.bookingStatus = 'Confirmed'
+			-- allow sharing same service session
+			AND NOT (BS.serviceID = ? AND BS.serviceDate = ?)
+			-- check overlap with other sessions
+			AND (
             BS.serviceDate < DATE_ADD(?, INTERVAL ? DAY)
-        AND DATE_ADD(BS.serviceDate, INTERVAL S.duration DAY) > ?
-      )
-)");
+			AND DATE_ADD(BS.serviceDate, INTERVAL S.duration DAY) > ?
+			)
+		)");
 
 			if (!overlapStmt) continue;
 
@@ -333,7 +331,7 @@ int Booking::assignInstructor(int serviceID, const string& serviceDate, int paxL
 			overlapStmt->setInt(2, serviceID);
 			overlapStmt->setString(3, serviceDate);
 
-			// overlap window for NEW booking
+			// overlap window for new booking
 			overlapStmt->setString(4, serviceDate);
 			overlapStmt->setInt(5, duration);
 			overlapStmt->setString(6, serviceDate);
@@ -687,14 +685,14 @@ void Booking::viewInstructorSchedule() {
             S.serviceType,
             C.cusName,
             B.bookingStatus
-        FROM instructor_assignment IA
-        JOIN booking B ON IA.bookingID = B.bookingID
-        JOIN booking_service BS ON B.bookingID = BS.bookingID
-        JOIN service S ON BS.serviceID = S.serviceID
-        JOIN customer C ON B.cusID = C.cusID
-        WHERE IA.instructorID = ?
-          AND BS.serviceDate BETWEEN ? AND ?
-        ORDER BY BS.serviceDate
+			FROM instructor_assignment IA
+			JOIN booking B ON IA.bookingID = B.bookingID
+			JOIN booking_service BS ON B.bookingID = BS.bookingID
+			JOIN service S ON BS.serviceID = S.serviceID
+			JOIN customer C ON B.cusID = C.cusID
+			WHERE IA.instructorID = ?
+			AND BS.serviceDate BETWEEN ? AND ?
+			ORDER BY BS.serviceDate
     )");
 
 	if (!pstmt) return;
@@ -727,110 +725,5 @@ void Booking::viewInstructorSchedule() {
 	cin.get();
 }
 
-void Booking::generateCertificate() {
-	int bookingID;
-	cout << "\n--- Generate Certificate ---\n";
-	cout << "Enter Booking ID: ";
-	if (!(cin >> bookingID)) {
-		cin.clear(); cin.ignore(10000, '\n');
-		cout << "Invalid input.\n";
-		return;
-	}
 
-	// Check booking + service type (only for lessons)
-	auto pstmt = db.prepare(R"(
-        SELECT 
-            B.bookingStatus,
-            C.cusName,
-            C.cusPhoneNo,
-            S.serviceName,
-            S.serviceType,
-            BS.serviceDate,
-            I.instructorName
-        FROM booking B
-        JOIN customer C ON B.cusID=C.cusID
-        JOIN booking_service BS ON B.bookingID=BS.bookingID
-        JOIN service S ON BS.serviceID=S.serviceID
-        JOIN instructor_assignment IA ON B.bookingID=IA.bookingID
-        JOIN instructor I ON IA.instructorID=I.instructorID
-        WHERE B.bookingID=?
-    )");
-	if (!pstmt) return;
-
-	pstmt->setInt(1, bookingID);
-	auto res = pstmt->executeQuery();
-
-	if (!res->next()) {
-		cout << "Booking not found.\n";
-		delete res; delete pstmt;
-		return;
-	}
-
-	string status = res->getString("bookingStatus");
-	string serviceType = res->getString("serviceType");
-
-	// You can decide your own rule here:
-	// Example: Only allow certificate if status == "Confirmed"
-	// or add a new status "Completed"
-	if (status == "Cancelled") {
-		cout << "Cannot generate certificate for cancelled booking.\n";
-		delete res; delete pstmt;
-		cout << "Press any key to continue...\n\n";
-		cin.ignore();
-		cin.get();
-		return;
-	}
-	// Optional: only "Lesson" gets certificate
-	// if (serviceType != "Lesson") { ... }
-
-	string cusName = res->getString("cusName");
-	string serviceName = res->getString("serviceName");
-	string serviceDate = res->getString("serviceDate");
-	string instructorName = res->getString("instructorName");
-
-	delete res;
-	delete pstmt;
-
-	// Generate a simple text certificate
-	string filename = "certificates/certificate_booking_" + to_string(bookingID) + ".txt";
-	ofstream out(filename);
-	if (!out) {
-		cout << "Failed to create certificate file.\n";
-		return;
-	}
-	out << "+-----------------------------------------------------------+\n";
-	out << "|                                                           |\n";
-	out << "|              **DIVING RESORT OFFICIAL SEAL**              |\n";
-	out << "|              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~                |\n";
-	out << "|                                                           |\n";
-	out << "|   This is to certify that the following individual has    |\n";
-	out << "|   successfully participated in our diving program.        |\n";
-	out << "|                                                           |\n";
-	out << "+-----------------------------------------------------------+\n";
-	out << "|                                                           |\n";
-	out << "|   CANDIDATE: " << left << setw(44) << cusName << " |\n";
-	out << "|   COURSE:    " << left << setw(44) << serviceName << " |\n";
-	out << "|   DATE:      " << left << setw(44) << serviceDate << " |\n";
-	out << "|   INSTRUCTOR:" << left << setw(44) << instructorName << " |\n";
-	out << "|   BOOKING ID:" << left << setw(44) << bookingID << " |\n";
-	out << "|                                                           |\n";
-	out << "+-----------------------------------------------------------+\n";
-	out << "|                                                           |\n";
-	out << "|   STATUS: [ COMPLETED ]                                   |\n";
-	out << "|   ISSUE DATE: " << left << setw(43) << pay.getCurrentDate() << " |\n";
-	out << "|                                                           |\n";
-	out << "|   _______________________         _____________________   |\n";
-	out << "|    Instructor Signature            Resort Management      |\n";
-	out << "|                                                           |\n";
-	out << "+-----------------------------------------------------------+\n";
-
-	out.close();
-
-	cout << "\nCertificate generated: " << filename << "\n";
-	cout << "(File saved in your program folder)\n";
-
-	cout << "\nPress Enter to continue...";
-	cin.ignore(10000, '\n');
-	cin.get();
-}
 
