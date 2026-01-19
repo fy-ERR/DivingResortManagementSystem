@@ -461,13 +461,18 @@ void Booking::searchBooking() {
 	}
 
 	auto pstmt = db.prepare(R"(
-		SELECT 
-			B.bookingID, B.bookingDate, B.bookingStatus, B.totalAmount, B.refundAmount,
-			C.cusName, C.cusPhoneNo,
-			S.serviceName, S.serviceType,
-			BS.serviceDate,
-			I.instructorName,
-			COALESCE(SUM(P.paymentAmount), 0) AS totalPaid
+    SELECT 
+        B.bookingID, B.bookingDate, B.bookingStatus, B.totalAmount, B.refundAmount,
+        C.cusName, C.cusPhoneNo,
+        S.serviceName, S.serviceType,
+        BS.serviceDate,
+        I.instructorName,
+        COALESCE(SUM(P.paymentAmount), 0) AS totalPaid,
+
+        CERT.certID,
+        CERT.issueDate,
+        CERT.status AS certStatus,
+        CERT.filePath
 		FROM BOOKING B
 		JOIN CUSTOMER C ON B.cusID = C.cusID
 		JOIN BOOKING_SERVICE BS ON B.bookingID = BS.bookingID
@@ -475,9 +480,12 @@ void Booking::searchBooking() {
 		JOIN INSTRUCTOR_ASSIGNMENT IA ON B.bookingID = IA.bookingID
 		JOIN INSTRUCTOR I ON IA.instructorID = I.instructorID
 		LEFT JOIN PAYMENT P ON B.bookingID = P.bookingID
+		LEFT JOIN CERTIFICATE CERT ON B.bookingID = CERT.bookingID
+
 		WHERE B.bookingID = ?
 		GROUP BY B.bookingID
-	)");
+)");
+
 
 	if (!pstmt) {
 		cerr << "Error preparing search statement." << endl;
@@ -515,6 +523,18 @@ void Booking::searchBooking() {
 			if (refundAmount > 0.0) {
 				cout << setw(20) << "Refund Processed:" << "RM " << fixed << setprecision(2) << refundAmount << "\n";
 			}
+		}
+		//retrive and display cert info
+		cout << setw(20) << "CERTIFICATE INFORMATION: \n";
+
+		if (res->isNull("certID")) {
+			cout << "No certificate generated yet.\n";
+		}
+		else {
+			cout << left << setw(20) << "Certificate ID:" << res->getInt("certID") << "\n";
+			cout << setw(20) << "Issue Date:" << res->getString("issueDate") << "\n";
+			cout << setw(20) << "Cert Status:" << res->getString("certStatus") << "\n";
+			cout << setw(20) << "File Path:" << res->getString("filePath") << "\n";
 		}
 	}
 	else {
